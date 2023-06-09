@@ -30,12 +30,26 @@ async function run() {
     await client.connect();
 
     const classCollection = client.db("summerClass").collection("classes");
+    const userCollection = client.db("summerClass").collection("users");
+
+    // user api data create
+    app.post("/users", async (req, res) => {
+      const user = req.body;
+      const query = { email: user.email };
+      const existingUser = await userCollection.findOne(query);
+      if (existingUser) {
+        return res.send({ message: "user already exist" });
+      }
+      const result = await userCollection.insertOne(user);
+      res.send(result);
+    });
 
     //     All Class get Api
     app.get("/AllClasses", async (req, res) => {
       const result = await classCollection.find().toArray();
       res.send(result);
     });
+
     // Top class get api
     app.get("/TopClasses", async (req, res) => {
       const query = { enrolled_students: -1 };
