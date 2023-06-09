@@ -31,9 +31,21 @@ async function run() {
 
     const classCollection = client.db("summerClass").collection("classes");
 
-    // class get api
-    app.get("/classes", async (req, res) => {
+    //     All Class get Api
+    app.get("/AllClasses", async (req, res) => {
       const result = await classCollection.find().toArray();
+      res.send(result);
+    });
+    // Top class get api
+    app.get("/TopClasses", async (req, res) => {
+      const query = { enrolled_students: -1 };
+      const result = await classCollection.find().sort(query).toArray();
+      res.send(result);
+    });
+    // Top Instructors get api
+    app.get("/TopInstructors", async (req, res) => {
+      const query = { enrolled_students: -1 };
+      const result = await classCollection.find().sort(query).toArray();
       res.send(result);
     });
 
