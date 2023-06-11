@@ -52,12 +52,14 @@ async function run() {
 
     const classCollection = client.db("summerClass").collection("classes");
     const usersCollection = client.db("summerClass").collection("users");
-    const dynamicClassCollection = client.db("summerClass").collection("dynamicClass");
+    const dynamicClassCollection = client
+      .db("summerClass")
+      .collection("dynamicClass");
 
     // jwt api
     app.post("/jwt", (req, res) => {
-      const users = req.body;
-      const token = jwt.sign(users, process.env.ACCESS_TOKEN_SECRET, {
+      const user = req.body;
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
         expiresIn: "1h",
       });
       // console.log("token", token);
@@ -101,12 +103,6 @@ async function run() {
       next();
     };
 
-    // user get api
-    app.get("/users", verifyJwt, async (req, res) => {
-      const result = await usersCollection.find().toArray();
-      res.send(result);
-    });
-
     // user api data create
     app.post("/users", async (req, res) => {
       const user = req.body;
@@ -118,14 +114,19 @@ async function run() {
       const result = await usersCollection.insertOne(user);
       res.send(result);
     });
+    // user get api
+    app.get("/users", verifyJwt, verifyAdmin, async (req, res) => {
+      const result = await usersCollection.find().toArray();
+      res.send(result);
+    });
 
     // check admin by email using get method
-    app.get("/users/admin/:email", verifyJwt, verifyAdmin, async (req, res) => {
+    app.get("/users/admin/:email", verifyJwt, async (req, res) => {
       const email = req.params.email;
-
-      // if (req.decoded.email !== email) {
-      //   res.send({ admin: false });
-      // }
+      const decodedEmail = req.decoded.email;
+      if (decodedEmail !== email) {
+        res.send({ admin: false });
+      }
 
       const query = { email: email };
       // console.log("130  admin query", query);
@@ -188,23 +189,22 @@ async function run() {
     // });
 
     // student get api
-    app.get("/users/student/:email", async (req, res) => {
-      const email = req.params.email;
-      // console.log(email);
-      if (req.decoded.email !== email) {
-        res.send({ student: false });
-      }
+    // app.get("/users/student/:email", async (req, res) => {
+    //   const email = req.params.email;
+    //   // console.log(email);
+    //   if (req.decoded.email !== email) {
+    //     res.send({ student: false });
+    //   }
 
-      const query = { email: email };
-      const user = await usersCollection.findOne(query);
-      const result = { student: user?.roll === "student" };
+    //   const query = { email: email };
+    //   const user = await usersCollection.findOne(query);
+    //   const result = { student: user?.roll === "student" };
 
-      res.send(result);
-    });
-
+    //   res.send(result);
+    // });
 
     // Add Class API by instructor using post method
-    app.post("/addClass",  async (req, res) => {
+    app.post("/addClass", async (req, res) => {
       const newClass = req.body;
       // const updateDoc = {
       //   $set: {
@@ -231,6 +231,19 @@ async function run() {
     app.get("/TopInstructors", async (req, res) => {
       const query = { enrolled_students: -1 };
       const result = await classCollection.find().sort(query).toArray();
+      res.send(result);
+    });
+
+    // handle Approve Api By patch
+    app.patch("/AllClasses/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          status: "approved",
+        },
+      };
+      const result = await classCollection.updateOne(filter, updateDoc);
       res.send(result);
     });
 
