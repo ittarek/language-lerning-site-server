@@ -52,9 +52,9 @@ async function run() {
 
     const classCollection = client.db("summerClass").collection("classes");
     const usersCollection = client.db("summerClass").collection("users");
-    const dynamicClassCollection = client
+    const SelectedClassCollection = client
       .db("summerClass")
-      .collection("dynamicClass");
+      .collection("selectedClass");
 
     // jwt api
     app.post("/jwt", (req, res) => {
@@ -79,29 +79,29 @@ async function run() {
       next();
     };
     // admin Instructors middleware
-    const verifyInstructors = async (req, res, next) => {
-      const email = req.decoded.email;
-      const query = { email: email };
-      const user = await usersCollection.findOne(query);
-      if (user?.roll !== "instructor") {
-        return res
-          .status(403)
-          .send({ error: true, message: "forbidden access" });
-      }
-      next();
-    };
-    // admin Instructors middleware
-    const studentVerify = async (req, res, next) => {
-      const email = req.decoded.email;
-      const query = { email: email };
-      const user = await usersCollection.findOne(query);
-      if (user?.roll !== "student") {
-        return res
-          .status(403)
-          .send({ error: true, message: "forbidden access" });
-      }
-      next();
-    };
+    // const verifyInstructors = async (req, res, next) => {
+    //   const email = req.decoded.email;
+    //   const query = { email: email };
+    //   const user = await usersCollection.findOne(query);
+    //   if (user?.roll !== "instructor") {
+    //     return res
+    //       .status(403)
+    //       .send({ error: true, message: "forbidden access" });
+    //   }
+    //   next();
+    // };
+    // admin student middleware
+    // const studentVerify = async (req, res, next) => {
+    //   const email = req.decoded.email;
+    //   const query = { email: email };
+    //   const user = await usersCollection.findOne(query);
+    //   if (user?.roll !== "student") {
+    //     return res
+    //       .status(403)
+    //       .send({ error: true, message: "forbidden access" });
+    //   }
+    //   next();
+    // };
 
     // user api data create
     app.post("/users", async (req, res) => {
@@ -161,17 +161,18 @@ async function run() {
       res.send(result);
     });
     // instructors get api
-    app.get("/users/instructors/:email", async (req, res) => {
+    app.get("/users/instructor/:email", verifyJwt, async (req, res) => {
       const email = req.params.email;
-      // console.log(email);
-      if (req.decoded.email !== email) {
+      const decodedEmail = req.decoded.email;
+      if (decodedEmail !== email) {
         res.send({ instructor: false });
       }
 
       const query = { email: email };
+      // console.log("130  instructor query", query);
       const user = await usersCollection.findOne(query);
       const result = { instructor: user?.roll === "instructor" };
-
+      // console.log("132 instructor result", result);
       res.send(result);
     });
 
@@ -215,6 +216,21 @@ async function run() {
       res.send(result);
     });
 
+    // Class page selected Class data post api
+    app.post("/selectedClass/:id", async (req, res) => {
+      const newSelectedClass = req.body;
+
+      const result = await SelectedClassCollection.insertOne(newSelectedClass);
+      res.send(result);
+    });
+    // selected data get for student dashboard using get api
+    app.get("/selectedClass/:email", async (req, res) => {
+      const email = req.params.email
+      const query = {email: email}
+      const result = await SelectedClassCollection.find(query).toArray();
+      res.send(result);
+    });
+
     //     All Class get Api
     app.get("/AllClasses", async (req, res) => {
       const result = await classCollection.find().toArray();
@@ -241,6 +257,18 @@ async function run() {
       const updateDoc = {
         $set: {
           status: "approved",
+        },
+      };
+      const result = await classCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
+    // handle Denied Api By patch
+    app.patch("/AllClasses/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          status: "denied",
         },
       };
       const result = await classCollection.updateOne(filter, updateDoc);
