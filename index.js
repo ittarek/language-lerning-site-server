@@ -52,6 +52,7 @@ async function run() {
 
     const classCollection = client.db("summerClass").collection("classes");
     const usersCollection = client.db("summerClass").collection("users");
+    const dynamicClassCollection = client.db("summerClass").collection("dynamicClass");
 
     // jwt api
     app.post("/jwt", (req, res) => {
@@ -101,7 +102,7 @@ async function run() {
     };
 
     // user get api
-    app.get("/users", async (req, res) => {
+    app.get("/users", verifyJwt, async (req, res) => {
       const result = await usersCollection.find().toArray();
       res.send(result);
     });
@@ -163,7 +164,7 @@ async function run() {
       const email = req.params.email;
       // console.log(email);
       if (req.decoded.email !== email) {
-        res.send({ admin: false });
+        res.send({ instructor: false });
       }
 
       const query = { email: email };
@@ -191,13 +192,26 @@ async function run() {
       const email = req.params.email;
       // console.log(email);
       if (req.decoded.email !== email) {
-        res.send({ admin: false });
+        res.send({ student: false });
       }
 
       const query = { email: email };
       const user = await usersCollection.findOne(query);
       const result = { student: user?.roll === "student" };
 
+      res.send(result);
+    });
+
+
+    // Add Class API by instructor using post method
+    app.post("/addClass",  async (req, res) => {
+      const newClass = req.body;
+      // const updateDoc = {
+      //   $set: {
+      //     status: "pending",
+      //   },
+      // };
+      const result = await classCollection.insertOne(newClass);
       res.send(result);
     });
 
