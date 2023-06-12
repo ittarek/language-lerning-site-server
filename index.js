@@ -3,9 +3,9 @@ const app = express();
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
-// const stripe = require("stripe")(process.env.PAYMENT_SECRET_KEY);
+const stripe = require("stripe")(process.env.PAYMENT_SECRET_KEY);
 const port = process.env.PORT || 5000;
-
+// console.log(process.env.PAYMENT_SECRET_KEY);
 // middleware
 app.use(cors());
 app.use(express.json());
@@ -34,6 +34,7 @@ const verifyJwt = (req, res, next) => {
 // mongodb data base
 
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
+// const { default: Stripe } = require("stripe");
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.hi7rjxl.mongodb.net/?retryWrites=true&w=majority`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -55,6 +56,7 @@ async function run() {
     const SelectedClassCollection = client
       .db("summerClass")
       .collection("selectedClass");
+    const paymentCollection = client.db("summerClass").collection("payments");
 
     // jwt api
     app.post("/jwt", (req, res) => {
@@ -78,30 +80,6 @@ async function run() {
       }
       next();
     };
-    // admin Instructors middleware
-    // const verifyInstructors = async (req, res, next) => {
-    //   const email = req.decoded.email;
-    //   const query = { email: email };
-    //   const user = await usersCollection.findOne(query);
-    //   if (user?.roll !== "instructor") {
-    //     return res
-    //       .status(403)
-    //       .send({ error: true, message: "forbidden access" });
-    //   }
-    //   next();
-    // };
-    // admin student middleware
-    // const studentVerify = async (req, res, next) => {
-    //   const email = req.decoded.email;
-    //   const query = { email: email };
-    //   const user = await usersCollection.findOne(query);
-    //   if (user?.roll !== "student") {
-    //     return res
-    //       .status(403)
-    //       .send({ error: true, message: "forbidden access" });
-    //   }
-    //   next();
-    // };
 
     // user api data create
     app.post("/users", async (req, res) => {
@@ -176,34 +154,6 @@ async function run() {
       res.send(result);
     });
 
-    // make student api
-    // app.patch("/users/student/:id", async (req, res) => {
-    //   const id = req.params.id;
-    //   const filter = { _id: new ObjectId(id) };
-    //   const updateDoc = {
-    //     $set: {
-    //       roll: "student",
-    //     },
-    //   };
-    //   const result = await usersCollection.updateOne(filter, updateDoc);
-    //   res.send(result);
-    // });
-
-    // student get api
-    // app.get("/users/student/:email", async (req, res) => {
-    //   const email = req.params.email;
-    //   // console.log(email);
-    //   if (req.decoded.email !== email) {
-    //     res.send({ student: false });
-    //   }
-
-    //   const query = { email: email };
-    //   const user = await usersCollection.findOne(query);
-    //   const result = { student: user?.roll === "student" };
-
-    //   res.send(result);
-    // });
-
     // Add Class API by instructor using post method
     app.post("/addClass", async (req, res) => {
       const newClass = req.body;
@@ -225,9 +175,17 @@ async function run() {
     });
     // selected data get for student dashboard using get api
     app.get("/selectedClass/:email", async (req, res) => {
-      const email = req.params.email
-      const query = {email: email}
+      const email = req.params.email;
+      const query = { email: email };
       const result = await SelectedClassCollection.find(query).toArray();
+      res.send(result);
+    });
+    // specific class get by id form payment
+    app.get("/paymentClass/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+
+      const result = await SelectedClassCollection.findOne(query);
       res.send(result);
     });
 
@@ -275,6 +233,79 @@ async function run() {
       res.send(result);
     });
 
+    // // create payment intent
+    // app.post("/create-payment-intent", async (req, res) => {
+    //   const price = req.body;
+    //   console.log(price);
+    //   const amount = parseInt(price * 100);
+
+    //   console.log(amount);
+    //   const paymentIntent = await stripe.paymentIntents.create({
+    //     amount: amount,
+    //     currency: "usd",
+    //     payment_method_types: ["card"],
+    //   });
+
+    //   res.send({
+    //     clientSecret: paymentIntent.client_secret,
+    //   });
+    // });
+
+    // // payment related api
+    // app.post("/payments", async (req, res) => {
+    //   const payment = req.body;
+    //   console.log(payment);
+    //   const result = await paymentCollection.insertOne(payment);
+
+    //   // const query = {
+    //   //   _id: { $in: payment.dataID.map((id) => new ObjectId(id)) },
+    //   // };
+    //   const id = req.params.id;
+    //   const query = { _id: new ObjectId(id) };
+
+    //   // const deleted = await SelectedClassCollection.deleteOne(query);
+
+    //   res.send(result);
+    // });
+
+    app.post("/payment", async (req, res) => {
+      let status, error;
+      const { token, amount } = req.body;
+      const payment = req.body;
+      const result = await paymentCollection.insertOne(payment);
+      try {
+        await stripe.charges.create({
+          source: token.id,
+          amount,
+          currency: 'usd',
+        });
+        status = "success";
+      } catch (error) {
+        console.log(error);
+        status = "Failure";
+      }
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const deleted = await SelectedClassCollection.deleteOne(query);
+      res.send({ result, deleted });
+      res.json({ error, status });
+    });
+
+    // class delete api
+    app.delete("/payment/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await SelectedClassCollection.deleteOne(query);
+      res.send(result);
+    });
+    // get enrolled class which class payment
+ 
+    app.get("/enrolledClass/:email", async (req, res) => {
+      const email = req.params.email;
+      const query = { email: email };
+      const result = await paymentCollection.find(query).toArray();
+      res.send(result);
+    });
     app.get("/", (req, res) => {
       res.send("Summer Camp Is Running Soon");
     });
