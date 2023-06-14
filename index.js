@@ -81,6 +81,12 @@ async function run() {
       next();
     };
 
+    // user get api
+    app.get("/users", verifyJwt, verifyAdmin, async (req, res) => {
+      const result = await usersCollection.find().toArray();
+      res.send(result);
+    });
+
     // user api data create
     app.post("/users", async (req, res) => {
       const user = req.body;
@@ -90,11 +96,6 @@ async function run() {
         return res.send({ message: "user already exist" });
       }
       const result = await usersCollection.insertOne(user);
-      res.send(result);
-    });
-    // user get api
-    app.get("/users", verifyJwt, verifyAdmin, async (req, res) => {
-      const result = await usersCollection.find().toArray();
       res.send(result);
     });
 
@@ -171,18 +172,18 @@ async function run() {
       const id = req.params.id;
       const newSelectedClass = req.body;
       const query = { _id: new ObjectId(id) };
-
-      const result = await SelectedClassCollection.insertOne(
-        query,
-        newSelectedClass
-      );
+      const existingClass = await SelectedClassCollection.findOne(query);
+      if (existingClass) {
+        return res.send({ message: "Class already exist" });
+      }
+      const result = await SelectedClassCollection.insertOne(newSelectedClass);
       res.send(result);
     });
     // selected data get for student dashboard using get api
-    app.get("/selectedClass/:email", async (req, res) => {
-      const email = req.params.email;
-      const query = { email: email };
-      const result = await SelectedClassCollection.find(query).toArray();
+    app.get("/getSelectedClass", async (req, res) => {
+      // const email = req.params.email;
+      // const query = { email: email };
+      const result = await SelectedClassCollection.find().toArray();
       res.send(result);
     });
     // specific class get by id form payment
