@@ -168,9 +168,14 @@ async function run() {
 
     // Class page selected Class data post api
     app.post("/selectedClass/:id", async (req, res) => {
+      const id = req.params.id;
       const newSelectedClass = req.body;
+      const query = { _id: new ObjectId(id) };
 
-      const result = await SelectedClassCollection.insertOne(newSelectedClass);
+      const result = await SelectedClassCollection.insertOne(
+        query,
+        newSelectedClass
+      );
       res.send(result);
     });
     // selected data get for student dashboard using get api
@@ -261,7 +266,7 @@ async function run() {
       const query = { _id: new ObjectId(id) };
       const deleted = await SelectedClassCollection.deleteOne(query);
       res.send({ result, deleted });
-      return res.send({ error, status });
+      res.send({ error, status });
     });
 
     // res.send({ result, deleted });
