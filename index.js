@@ -4,6 +4,7 @@ const cors = require("cors");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
 const stripe = require("stripe")(process.env.PAYMENT_SECRET_KEY);
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const port = process.env.PORT || 5000;
 // console.log(process.env.PAYMENT_SECRET_KEY);
 // middleware
@@ -33,7 +34,6 @@ const verifyJwt = (req, res, next) => {
 
 // mongodb data base
 
-const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 // const { default: Stripe } = require("stripe");
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.hi7rjxl.mongodb.net/?retryWrites=true&w=majority`;
 
@@ -201,6 +201,7 @@ async function run() {
       const result = await classCollection.find().sort(query).toArray();
       res.send(result);
     });
+    // TODO
     // Top Instructors get api
     app.get("/TopInstructors", async (req, res) => {
       const query = { enrolled_students: -1 };
