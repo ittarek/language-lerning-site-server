@@ -62,7 +62,7 @@ async function run() {
     app.post("/jwt", (req, res) => {
       const user = req.body;
       const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
-        expiresIn: "1h",
+        expiresIn: "7d",
       });
       // console.log("token", token);
       res.send({ token });
@@ -209,7 +209,7 @@ async function run() {
     });
 
     // handle Approve Api By patch
-    app.patch("/AllClasses/:id", async (req, res) => {
+    app.patch("/AllClasses/approved/:id", async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
       const updateDoc = {
@@ -221,7 +221,7 @@ async function run() {
       res.send(result);
     });
     // handle Denied Api By patch
-    app.patch("/AllClasses/:id", async (req, res) => {
+    app.patch("/AllClasses/denied/:id", async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
       const updateDoc = {
@@ -233,38 +233,10 @@ async function run() {
       res.send(result);
     });
 
-    // // create payment intent
-    // app.post("/create-payment-intent", async (req, res) => {
-    //   const price = req.body;
-    //   console.log(price);
-    //   const amount = parseInt(price * 100);
+    // app.post("/adminFeedBack", async (req, res) => {
+    //   const data = req.body;
 
-    //   console.log(amount);
-    //   const paymentIntent = await stripe.paymentIntents.create({
-    //     amount: amount,
-    //     currency: "usd",
-    //     payment_method_types: ["card"],
-    //   });
-
-    //   res.send({
-    //     clientSecret: paymentIntent.client_secret,
-    //   });
-    // });
-
-    // // payment related api
-    // app.post("/payments", async (req, res) => {
-    //   const payment = req.body;
-    //   console.log(payment);
-    //   const result = await paymentCollection.insertOne(payment);
-
-    //   // const query = {
-    //   //   _id: { $in: payment.dataID.map((id) => new ObjectId(id)) },
-    //   // };
-    //   const id = req.params.id;
-    //   const query = { _id: new ObjectId(id) };
-
-    //   // const deleted = await SelectedClassCollection.deleteOne(query);
-
+    //   const result = await classCollection.insertMany(data);
     //   res.send(result);
     // });
 
@@ -277,7 +249,7 @@ async function run() {
         await stripe.charges.create({
           source: token.id,
           amount,
-          currency: 'usd',
+          currency: "usd",
         });
         status = "success";
       } catch (error) {
@@ -288,50 +260,51 @@ async function run() {
       const query = { _id: new ObjectId(id) };
       const deleted = await SelectedClassCollection.deleteOne(query);
       res.send({ result, deleted });
-      res.json({ error, status });
+      return res.send({ error, status });
     });
 
-    // class delete api
+    // res.send({ result, deleted });
+    // res.json({ error, status });
+
     app.delete("/payment/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
-      const result = await SelectedClassCollection.deleteOne(query);
-      res.send(result);
+      const deleted = await SelectedClassCollection.deleteOne(query);
+      res.send(deleted);
     });
+
     // get enrolled class which class payment
- 
+
     app.get("/enrolledClass/:email", async (req, res) => {
       const email = req.params.email;
       const query = { email: email };
-      const result = await paymentCollection.find(query).toArray();
+      const result = await paymentCollection
+        .find(query)
+        .sort({ date: -1 })
+        .toArray();
       res.send(result);
     });
-    app.get("/", (req, res) => {
-      res.send("Summer Camp Is Running Soon");
-    });
-
-    app.listen(port, () => {
-      console.log(`Summer Camp server is running port ${port}`);
-    });
+    // app.get("/getSeat", async (req, res) => {
+    //   const result = await paymentCollection.find().toArray();
+    //   res.send(result);
+    // });
 
     // Send a ping to confirm a successful connection
     // await client.db("admin").command({ ping: 1 });
-    console.log(
-      "Pinged your deployment. You successfully connected to MongoDB!"
-    );
+    // console.log(
+    //   "Pinged your deployment. You successfully connected to MongoDB!"
+    // );
   } finally {
     // Ensures that the client will close when you finish/error
-    //     await client.close();
+    // await client.close();
   }
 }
 run().catch(console.dir);
 
-// Todo . vercel  এ ডিপ্লয় করার আগে এই line  গুলু  comment  করে দিতে হভে
-// // Send a ping to confirm a successful connection
-// await client.db("admin").command({ ping: 1 });
-// console.log(
-// "Pinged your deployment. You successfully connected to MongoDB!"
-// );
-//   } finally {
-// Ensures that the client will close when you finish/error
-//     await client.close();
+app.get("/", (req, res) => {
+  res.send("Summer Camp Is Running Soon");
+});
+
+app.listen(port, () => {
+  console.log(`Summer Camp server is running port ${port}`);
+});
