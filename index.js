@@ -467,6 +467,6 @@ app.use((err, req, res, next) => {
 });
 
 // ==================== START SERVER ====================
-app.listen(port, () => {
-  console.log(`🚀 Summer Camp server is running on port ${port}`);
-});
+// app.listen(port, () => {
+//   console.log(`🚀 Summer Camp server is running on port ${port}`);
+// });
