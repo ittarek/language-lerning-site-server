@@ -1,0 +1,3 @@
+delete node module and again run npm install
+remove package.lock.json = rm package-lock.json
+clean cache = npm cache clean --force

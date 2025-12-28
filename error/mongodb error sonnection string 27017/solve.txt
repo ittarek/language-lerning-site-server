@@ -1,0 +1,11 @@
+এই error টা আসছে কারণ আপনার MongoDB connection string এ :27017 বা port number আছে, যা mongodb+srv:// এর সাথে use করা যায় না।
+Solution: MongoDB URI Fix করুন
+// index.js এ এরকম আছে:
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.hi7rjxl.mongodb.net:27017/?retryWrites=true&w=majority`;
+ 
+fix = // index.js এ এভাবে করুন:
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.hi7rjxl.mongodb.net/?retryWrites=true&w=majority`;
+// Port number (:27017) remove করা হয়েছে
+
+
+fix =  db-user and db-pass check korte hobe 
