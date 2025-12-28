@@ -160,7 +160,7 @@ async function run() {
       const result = await classCollection.find().toArray();
       res.send(result);
     });
-
+const newerr = "new error"
     // Get top classes (sorted by enrolled students)
      // Backend e logging add kora holo
     app.get('/TopClasses', async (req, res) => {
