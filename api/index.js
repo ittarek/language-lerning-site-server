@@ -28,6 +28,7 @@ const verifyJwt = (req, res, next) => {
 };
 
 // MongoDB Connection - FIX করা হয়েছে
+
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.hi7rjxl.mongodb.net/?appName=Cluster0`; // ⚠️ শেষের extra quote remove করুন
 
 // Global client variable for connection reuse
@@ -427,28 +428,64 @@ app.patch('/reduceSeats/:id', verifyJwt, async (req, res) => {
   }
 });
 
-app.get('/enrolledClasses/:email', verifyJwt, async (req, res) => {
+// ==================== ENROLL STUDENT ROUTE (ADD TO BACKEND) ====================
+app.post('/enrolledClasses', verifyJwt, async (req, res) => {
   try {
-    const { paymentCollection } = await getCollections();
-    const email = req.params.email;
-    const decodedEmail = req.decoded.email;
+    const { enrollCourseCollection, SelectedClassCollection } = await getCollections();
+    const enrollmentData = req.body;
 
-    if (decodedEmail !== email) {
-      return res.status(403).send({
-        error: true,
-        message: 'Forbidden Access',
+    // Validate required fields
+    if (!enrollmentData.studentEmail || !enrollmentData.className) {
+      return res.status(400).json({
+        message: 'Student email and class name are required',
       });
     }
 
-    const query = { email: email };
-    const result = await paymentCollection.find(query).sort({ date: -1 }).toArray();
+    // Check if already enrolled
+    const existingEnrollment = await enrollCourseCollection.findOne({
+      studentEmail: enrollmentData.studentEmail,
+      className: enrollmentData.className,
+    });
 
-    res.send(result);
+    if (existingEnrollment) {
+      return res.status(409).json({
+        message: 'You are already enrolled in this class',
+      });
+    }
+
+    // Add enrollment
+    const result = await enrollCourseCollection.insertOne({
+      ...enrollmentData,
+      enrolledAt: new Date(),
+      status: 'active',
+    });
+
+    res.status(201).send(result);
   } catch (error) {
-    res.status(500).json({ message: 'Failed to fetch enrolled classes' });
+    console.error('Enrollment error:', error);
+    res.status(500).json({
+      message: 'Failed to enroll in class',
+      error: error.message,
+    });
   }
 });
 
+// ==================== UPDATE SELECTED CLASS STATUS ROUTE ====================
+app.patch('/payment/:id', verifyJwt, async (req, res) => {
+  try {
+    const { SelectedClassCollection } = await getCollections();
+    const id = req.params.id;
+    const { status } = req.body;
+
+    const filter = { _id: new ObjectId(id) };
+    const updateDoc = { $set: { status: status || 'paid' } };
+
+    const result = await SelectedClassCollection.updateOne(filter, updateDoc);
+    res.send(result);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to update payment status' });
+  }
+});
 // ==================== ERROR HANDLING ====================
 app.use((err, req, res, next) => {
   console.error(err.stack);
