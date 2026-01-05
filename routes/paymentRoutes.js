@@ -62,5 +62,24 @@ router.get('/:email', verifyJwt, async (req, res) => {
     res.status(500).json({ message: 'Failed to fetch payment history' });
   }
 });
-
+// In your backend (Node.js/Express)
+router.post("/", async (req, res) => {
+    const { planId, stripePriceId, userEmail } = req.body;
+    
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price: stripePriceId,
+          quantity: 1,
+        },
+      ],
+      mode: 'subscription', // or "payment" for one-time
+      success_url: `${'https://language-center-bedfd.web.app/'}/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${'https://language-center-bedfd.web.app/'}/pricing`,
+      customer_email: userEmail,
+    });
+    
+    res.json({ success: true, checkoutUrl: session.url });
+});
 module.exports = router;
