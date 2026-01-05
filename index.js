@@ -549,11 +549,11 @@
 //             <div class="header">
 //               <h1>Course Notification Confirmed! ✅</h1>
 //             </div>
-            
+
 //             <div class="content">
 //               <p>Hello,</p>
 //               <p>Thank you for signing up for notifications! We're excited to have you join us.</p>
-              
+
 //               <div class="course-details">
 //                 <h3>${courseTitle}</h3>
 //                 <p><strong>Start Date:</strong> ${new Date(
@@ -562,17 +562,17 @@
 //                 <p><strong>Price:</strong> $${coursePrice}</p>
 //                 <p><strong>Course ID:</strong> ${courseId}</p>
 //               </div>
-              
+
 //               <p>We'll send you an email reminder when the course is about to start. You can also:</p>
 //               <ul>
 //                 <li>Browse our other courses</li>
 //                 <li>Review course prerequisites</li>
 //                 <li>Prepare your learning environment</li>
 //               </ul>
-              
+
 //               <a href="https://language-center-bedfd.web.app/coming-soon-course/${courseId}" class="button">View Course Details</a>
 //             </div>
-            
+
 //             <div class="footer">
 //               <p>This is an automated email. Please do not reply to this message.</p>
 //               <p>&copy; 2024 Language Learner. All rights reserved.</p>
@@ -722,13 +722,17 @@ app.get('/', (req, res) => {
 
 // Use routes
 app.use('/api/auth', authRoutes);
+app.use('/api/auth/jwt', authRoutes);
+app.use('/api/auth/register', authRoutes);
+app.use('/api/auth/verify', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/classes', classRoutes);
+app.use('/api/AllClasses', classRoutes);
 app.use('/api/selected-classes', selectedClassRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/enrollments', enrollmentRoutes);
 app.use('/api/email', emailRoutes);
-
+// app.listen(port);
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);

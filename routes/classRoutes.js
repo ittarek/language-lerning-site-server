@@ -100,7 +100,15 @@ router.patch('/reduce-seats/:id', verifyJwt, async (req, res) => {
     res.status(500).json({ message: 'Failed to update seats' });
   }
 });
-
+router.get('/', async (req, res) => {
+  try {
+    const { classCollection } = await getCollections();
+    const result = await classCollection.find().toArray();
+    res.send(result);
+  } catch (error) {
+    res.status(500).send({ error: true, message: error.message });
+  }
+});
 // GET /api/classes/:id - Get single class by ID (MUST be last)
 router.get('/:id', async (req, res) => {
   try {

@@ -43,7 +43,7 @@ router.post('/send-notification', async (req, res) => {
                 ).toLocaleDateString()}</p>
                 <p><strong>Price:</strong> $${coursePrice}</p>
               </div>
-              <a href="https://language-center-bedfd.web.app/classes/${courseId}" class="button">View Course</a>
+              <a href="https://language-center-bedfd.web.app/coming-soon-course/${courseId}" class="button">View Course</a>
             </div>
             <div class="footer">
               <p>&copy; 2024 Language Learner</p>
