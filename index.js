@@ -255,31 +255,31 @@
 //   }
 // });
 
-app.patch('/AllClasses/approved/:id', async (req, res) => {
-  try {
-    const { classCollection } = await getCollections();
-    const id = req.params.id;
-    const filter = { _id: new ObjectId(id) };
-    const updateDoc = { $set: { status: 'approved' } };
-    const result = await classCollection.updateOne(filter, updateDoc);
-    res.send(result);
-  } catch (error) {
-    res.status(500).send({ error: true, message: error.message });
-  }
-});
+// app.patch('/AllClasses/approved/:id', async (req, res) => {
+//   try {
+//     const { classCollection } = await getCollections();
+//     const id = req.params.id;
+//     const filter = { _id: new ObjectId(id) };
+//     const updateDoc = { $set: { status: 'approved' } };
+//     const result = await classCollection.updateOne(filter, updateDoc);
+//     res.send(result);
+//   } catch (error) {
+//     res.status(500).send({ error: true, message: error.message });
+//   }
+// });
 
-app.patch('/AllClasses/denied/:id', async (req, res) => {
-  try {
-    const { classCollection } = await getCollections();
-    const id = req.params.id;
-    const filter = { _id: new ObjectId(id) };
-    const updateDoc = { $set: { status: 'denied' } };
-    const result = await classCollection.updateOne(filter, updateDoc);
-    res.send(result);
-  } catch (error) {
-    res.status(500).send({ error: true, message: error.message });
-  }
-});
+// app.patch('/AllClasses/denied/:id', async (req, res) => {
+//   try {
+//     const { classCollection } = await getCollections();
+//     const id = req.params.id;
+//     const filter = { _id: new ObjectId(id) };
+//     const updateDoc = { $set: { status: 'denied' } };
+//     const result = await classCollection.updateOne(filter, updateDoc);
+//     res.send(result);
+//   } catch (error) {
+//     res.status(500).send({ error: true, message: error.message });
+//   }
+// });
 
 // // ==================== SELECTED CLASS ROUTES ====================
 // app.get('/selectedClass/check', async (req, res) => {
