@@ -9,7 +9,7 @@ const verifyAdmin = async (req, res, next) => {
     const query = { email: email };
     const user = await usersCollection.findOne(query);
 
-    if (user?.roll !== 'admin') {
+    if (user?.role !== 'admin') {
       return res.status(403).send({ error: true, message: 'Forbidden access' });
     }
     next();

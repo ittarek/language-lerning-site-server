@@ -49,7 +49,7 @@ router.get('/admin/:email', verifyJwt, async (req, res) => {
 
     const query = { email: email };
     const user = await usersCollection.findOne(query);
-    const result = { admin: user?.roll === 'admin' };
+    const result = { admin: user?.role === 'admin' };
     res.send(result);
   } catch (error) {
     res.status(500).send({ error: true, message: error.message });
@@ -83,7 +83,7 @@ router.get('/instructor/:email', verifyJwt, async (req, res) => {
 
     const query = { email: email };
     const user = await usersCollection.findOne(query);
-    const result = { instructor: user?.roll === 'instructor' };
+    const result = { instructor: user?.role === 'instructor' };
     res.send(result);
   } catch (error) {
     res.status(500).send({ error: true, message: error.message });
